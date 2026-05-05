@@ -31,19 +31,250 @@ textarea::selection {
   background: rgba(255, 165, 2, 0.2);
 }
 
+/* ── Animations ──────────────────────────────────────────────────── */
+
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 4px 14px rgba(255, 71, 87, 0.25); }
+  50%       { box-shadow: 0 4px 22px rgba(255, 71, 87, 0.45); }
+}
+
+/* ── Navigation buttons ──────────────────────────────────────────── */
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #636e72;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+
+.nav-btn:hover {
+  color: #a4b0be;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.nav-btn.active {
+  color: #e8e6e3;
+  background: #1e1e2e;
+}
+
+.nav-badge {
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 8px;
+  background: rgba(164, 176, 190, 0.15);
+  color: #a4b0be;
+  min-width: 16px;
+  text-align: center;
+}
+
+.nav-badge.danger {
+  background: rgba(255, 71, 87, 0.2);
+  color: #ff4757;
+}
+
+/* ── Filter chip buttons ─────────────────────────────────────────── */
+
+.filter-btn {
+  padding: 3px 9px;
+  border: 1px solid #1e1e2e;
+  border-radius: 5px;
+  background: transparent;
+  color: #636e72;
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.filter-btn:hover {
+  color: #a4b0be;
+  border-color: #2d3436;
+}
+
+.filter-btn.active {
+  background: rgba(255, 165, 2, 0.1);
+  border-color: rgba(255, 165, 2, 0.35);
+  color: #ffa502;
+}
+
+/* ── Control bar elements (depth select, upload) ─────────────────── */
+
+.ctrl-select {
+  background: #14141f;
+  border: 1px solid #2d3436;
+  color: #a4b0be;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.ctrl-select:hover {
+  border-color: #636e72;
+}
+
+.ctrl-btn {
+  background: #14141f;
+  border: 1px solid #2d3436;
+  color: #a4b0be;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.ctrl-btn:hover {
+  color: #e8e6e3;
+  border-color: #636e72;
+}
+
+/* ── Action buttons ──────────────────────────────────────────────── */
+
+.action-btn {
+  padding: 7px 18px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+
+.action-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.action-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.action-btn.secondary {
+  background: #14141f;
+  border: 1px solid #2d3436;
+  color: #e8e6e3;
+}
+
+.action-btn.secondary:hover:not(:disabled) {
+  border-color: #636e72;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #ff4757, #ff6348);
+  border: none;
+  color: #fff;
+  box-shadow: 0 3px 14px rgba(255, 71, 87, 0.2);
+}
+
+.action-btn.primary:hover:not(:disabled) {
+  box-shadow: 0 5px 20px rgba(255, 71, 87, 0.35);
+}
+
+.action-btn.primary.disabled {
+  background: #2d3436;
+  color: #636e72;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.action-btn.amber {
+  background: #14141f;
+  border: 1px solid #2d3436;
+  color: #ffa502;
+}
+
+.action-btn.amber:hover:not(:disabled) {
+  border-color: rgba(255, 165, 2, 0.4);
+  background: rgba(255, 165, 2, 0.05);
+}
+
+.action-btn.danger-outline {
+  background: rgba(255, 71, 87, 0.06);
+  border: 1px solid rgba(255, 71, 87, 0.25);
+  color: #ff4757;
+}
+
+.action-btn.danger-outline:hover:not(:disabled) {
+  background: rgba(255, 71, 87, 0.12);
+  border-color: rgba(255, 71, 87, 0.45);
+}
+
+.action-btn.ghost {
+  background: transparent;
+  border: 1px solid #2d3436;
+  color: #636e72;
+}
+
+.action-btn.ghost:hover:not(:disabled) {
+  color: #a4b0be;
+}
+
+/* ── Bug card ────────────────────────────────────────────────────── */
+
+.bug-card {
+  padding: 14px 16px;
+  background: #12121a;
+  border: 1px solid #1e1e2e;
+  border-radius: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bug-card:hover {
+  border-color: #2d3436;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.expand-btn {
+  background: transparent;
+  border: 1px solid #1e1e2e;
+  color: #636e72;
+  font-family: inherit;
+  font-size: 9px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.expand-btn:hover {
+  color: #a4b0be;
+  border-color: #2d3436;
 }

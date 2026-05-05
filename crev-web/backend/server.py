@@ -186,13 +186,27 @@ async def health():
     }
 
 
+MAX_CODE_BYTES = 500_000  # 500 KB
+
+
+def _check_size(req: ReviewRequest) -> None:
+    if len(req.code.encode("utf-8")) > MAX_CODE_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Code exceeds the maximum allowed size of {MAX_CODE_BYTES // 1000} KB. "
+                   "Split the file into smaller pieces before submitting.",
+        )
+
+
 @app.post("/api/scan", response_model=ReviewResponse)
 async def scan_code(req: ReviewRequest):
     """Run static analysis only — free, instant, no API key needed."""
+    _check_size(req)
     return _run_review(req, use_ai=False)
 
 
 @app.post("/api/analyze", response_model=ReviewResponse)
 async def analyze_code(req: ReviewRequest):
     """Run full AI-powered review — requires server-side API key."""
+    _check_size(req)
     return _run_review(req, use_ai=True)
