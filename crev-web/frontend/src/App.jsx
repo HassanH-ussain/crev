@@ -426,9 +426,17 @@ function ChangelogView() {
 // ── Main App ────────────────────────────────────────────────────────────
 
 export default function App() {
-  const savedFiles = loadSavedState();
-  const [files, setFiles] = useState(savedFiles || [mkFile("buggy_example.py", SAMPLE_CODE)]);
-  const [activeId, setActiveId] = useState((savedFiles || [])[0]?.id ?? 1);
+  const [files, setFiles] = useState(() => loadSavedState() || [mkFile("buggy_example.py", SAMPLE_CODE)]);
+  const [activeId, setActiveId] = useState(() => {
+    try {
+      const raw = localStorage.getItem("crev-files-v1");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0].id;
+      }
+    } catch {}
+    return 1;
+  });
   const [view, setView] = useState("editor");
   const [depth, setDepth] = useState("standard");
   const [loading, setLoading] = useState(false);
@@ -463,10 +471,12 @@ export default function App() {
   }
 
   function closeFile(id) {
-    if (files.length <= 1) return;
-    const rest = files.filter((f) => f.id !== id);
-    setFiles(rest);
-    if (activeId === id) setActiveId(rest[0].id);
+    setFiles((prev) => {
+      if (prev.length <= 1) return prev;
+      const next = prev.filter((f) => f.id !== id);
+      setActiveId((cur) => (cur === id ? next[0].id : cur));
+      return next;
+    });
   }
 
   function handleUpload(fileList) {
@@ -716,7 +726,7 @@ export default function App() {
                   <textarea
                     ref={editorRef}
                     value={active.code}
-                    onChange={(e) => updateFile(active.id, { code: e.target.value, results: null })}
+                    onChange={(e) => updateFile(active.id, { code: e.target.value })}
                     onScroll={syncScroll}
                     spellCheck={false}
                     style={{ flex: 1, background: "transparent", color: "#e8e6e3", border: "none", outline: "none", resize: "none", fontFamily: "inherit", fontSize: 12, lineHeight: "19px", padding: "12px 12px 12px 6px", minHeight: 380, tabSize: 4, caretColor: "#ffa502" }}
