@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "PowerShell(Get-Command gh -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\GitHub CLI\" -ErrorAction SilentlyContinue; Get-ChildItem \"$env:LOCALAPPDATA\\\\Programs\\\\GitHub CLI\" -ErrorAction SilentlyContinue; Get-ChildItem \"$env:ProgramFiles\\\\GitHub CLI\" -ErrorAction SilentlyContinue)"
+    ]
+  }
+}
