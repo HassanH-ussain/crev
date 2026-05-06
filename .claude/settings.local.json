@@ -3,7 +3,8 @@
     "allow": [
       "Bash(git add *)",
       "PowerShell(Get-Command gh -ErrorAction SilentlyContinue)",
-      "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\GitHub CLI\" -ErrorAction SilentlyContinue; Get-ChildItem \"$env:LOCALAPPDATA\\\\Programs\\\\GitHub CLI\" -ErrorAction SilentlyContinue; Get-ChildItem \"$env:ProgramFiles\\\\GitHub CLI\" -ErrorAction SilentlyContinue)"
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\GitHub CLI\" -ErrorAction SilentlyContinue; Get-ChildItem \"$env:LOCALAPPDATA\\\\Programs\\\\GitHub CLI\" -ErrorAction SilentlyContinue; Get-ChildItem \"$env:ProgramFiles\\\\GitHub CLI\" -ErrorAction SilentlyContinue)",
+      "Bash(git -C /c/Users/Hassa/Downloads/crev-web show 50efea2 --stat)"
     ]
   }
 }
