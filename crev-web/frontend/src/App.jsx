@@ -235,6 +235,20 @@ const CHANGELOG = [
   },
 ];
 
+// ── Language content sniffer ────────────────────────────────────────────
+
+function sniffLanguage(code) {
+  if (!code || code.trim().length < 10) return null;
+  if (/^\s*#\s*(include|pragma|ifndef|define)\b/m.test(code)) return "cpp";
+  if (/^\s*(fn\s+\w|use\s+\w|impl\s+\w|pub\s+(fn|struct|enum|mod)\b)/m.test(code)) return "rust";
+  if (/^\s*(package\s+main|func\s+\w|import\s+\()/m.test(code)) return "go";
+  if (/^\s*(public\s+(class|interface|enum)\s+\w|import\s+java\.)/m.test(code)) return "java";
+  if (/:\s*(string|number|boolean|any|void)\b/.test(code) || /interface\s+\w+\s*\{/.test(code)) return "typescript";
+  if (/\b(const|let|var)\b.+?(=>|\bfunction\b)/.test(code) || /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\b/m.test(code)) return "javascript";
+  if (/^\s*def\s+\w+\s*\(/m.test(code) || /^\s*(import\s+\w|from\s+\w+\s+import)/m.test(code)) return "python";
+  return null;
+}
+
 // ── File state helpers ──────────────────────────────────────────────────
 
 let fileId = 1;
@@ -465,7 +479,7 @@ export default function App() {
   }
 
   function addFile() {
-    const f = mkFile(`untitled_${fileId}.py`, "# Write your code here\n");
+    const f = mkFile(`untitled_${fileId}`, "");
     setFiles((prev) => [...prev, f]);
     setActiveId(f.id);
   }
@@ -523,12 +537,10 @@ export default function App() {
 
   async function runReview(file, mode) {
     const apiFn = mode === "scan" ? scanCode : analyzeCode;
-    return apiFn({
-      code: file.code,
-      filename: file.name,
-      language: file.language === "auto" ? null : file.language,
-      depth,
-    });
+    const language = file.language === "auto"
+      ? (sniffLanguage(file.code) || null)
+      : file.language;
+    return apiFn({ code: file.code, filename: file.name, language, depth });
   }
 
   async function handleSingle(mode) {
@@ -542,7 +554,11 @@ export default function App() {
     const iv = setInterval(() => { idx = (idx + 1) % msgs.length; setLoadingMsg(msgs[idx]); }, 1600);
     try {
       const result = await runReview(active, mode);
-      updateFile(active.id, { results: result });
+      const updates = { results: result };
+      if (active.language === "auto" && result.language && result.language !== "unknown") {
+        updates.language = result.language;
+      }
+      updateFile(active.id, updates);
     } catch (e) {
       updateFile(active.id, { results: makeErrorResult(active.name, e.message) });
     }
@@ -558,7 +574,14 @@ export default function App() {
       setLoadingMsg(`Scanning ${f.name}...`);
       try {
         const result = await runReview(f, mode);
-        setFiles((prev) => prev.map((pf) => (pf.id === f.id ? { ...pf, results: result } : pf)));
+        setFiles((prev) => prev.map((pf) => {
+          if (pf.id !== f.id) return pf;
+          const updates = { ...pf, results: result };
+          if (pf.language === "auto" && result.language && result.language !== "unknown") {
+            updates.language = result.language;
+          }
+          return updates;
+        }));
       } catch (e) {
         setFiles((prev) => prev.map((pf) => (pf.id === f.id ? { ...pf, results: makeErrorResult(f.name, e.message) } : pf)));
       }

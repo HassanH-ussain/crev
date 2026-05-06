@@ -90,11 +90,37 @@ class ReviewResponse(BaseModel):
 
 # ── Helper ────────────────────────────────────────────────────────────
 
+def _sniff_language(code: str) -> str | None:
+    """Rough content-based language detection used when the filename gives no signal."""
+    import re
+    if re.search(r'^\s*#\s*(include|pragma|ifndef|define)\b', code, re.MULTILINE):
+        return "cpp"
+    if re.search(r'^\s*(fn\s+\w|use\s+\w|impl\s+\w|pub\s+(fn|struct|enum|mod)\b)', code, re.MULTILINE):
+        return "rust"
+    if re.search(r'^\s*(package\s+main|func\s+\w+|import\s+\()', code, re.MULTILINE):
+        return "go"
+    if re.search(r'^\s*(public\s+(class|interface|enum)\s+\w|import\s+java\.)', code, re.MULTILINE):
+        return "java"
+    if re.search(r':\s*(string|number|boolean|any|void)\b', code) or \
+       re.search(r'interface\s+\w+\s*\{', code):
+        return "typescript"
+    if re.search(r'\b(const|let|var)\b.+?(=>|function)', code) or \
+       re.search(r'^\s*(export\s+)?(default\s+)?(async\s+)?function\b', code, re.MULTILINE):
+        return "javascript"
+    if re.search(r'^\s*def\s+\w+\s*\(', code, re.MULTILINE) or \
+       re.search(r'^\s*(import\s+\w|from\s+\w+\s+import)', code, re.MULTILINE):
+        return "python"
+    return None
+
+
 def _resolve_language(code: str, filename: str, lang_override: str | None) -> str:
     """Determine language from override, filename, or code content."""
     if lang_override and lang_override != "auto":
         return lang_override
-    return detect_language(filename).value
+    detected = detect_language(filename).value
+    if detected == "unknown":
+        detected = _sniff_language(code) or "unknown"
+    return detected
 
 
 def _run_review(req: ReviewRequest, use_ai: bool) -> ReviewResponse:
@@ -108,7 +134,7 @@ def _run_review(req: ReviewRequest, use_ai: bool) -> ReviewResponse:
         "python": ".py", "javascript": ".js", "typescript": ".ts",
         "cpp": ".cpp", "c": ".c", "java": ".java", "rust": ".rs", "go": ".go",
     }
-    suffix = suffix_map.get(language_str, ".py")
+    suffix = suffix_map.get(language_str, ".txt")
 
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=suffix, delete=False, encoding="utf-8"
