@@ -8,7 +8,7 @@ import { tokenize } from "./highlight";
  * position, so the colored text stays glued to the caret.
  */
 
-const LINE_H = 19; // px — must match the CSS line-height on both layers
+const LINE_H = 20; // px — must match the CSS line-height on both layers
 
 const TOKEN_CLASS = {
   keyword: "tok-kw",
@@ -81,11 +81,14 @@ export default function CodeEditor({ code, language, issueLines, flash, onChange
       ta.scrollTop = Math.max(0, target - ta.clientHeight / 2);
     }
     syncScroll();
+    // On stacked (narrow) layouts the editor may be off-screen entirely —
+    // bring it into the page viewport as well.
+    ta.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [flash]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-      <div style={{ display: "flex", flex: 1, minHeight: 380 }}>
+      <div className="editor-body">
         {/* Line numbers */}
         <div ref={gutterRef} className="gutter">
           {lines.map((_, i) => (
@@ -129,6 +132,7 @@ export default function CodeEditor({ code, language, issueLines, flash, onChange
             onClick={updateCursor}
             spellCheck={false}
             wrap="off"
+            aria-label="Code editor"
             placeholder={"// Paste code here, drop a file, or start typing…"}
           />
         </div>

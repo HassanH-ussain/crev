@@ -8,22 +8,22 @@ import "./index.css";
 const SEVERITY = {
   critical:   { color: "#ff4757", icon: "●", bg: "rgba(255,71,87,0.08)",   border: "rgba(255,71,87,0.25)" },
   warning:    { color: "#ffa502", icon: "●", bg: "rgba(255,165,2,0.08)",   border: "rgba(255,165,2,0.25)" },
-  suggestion: { color: "#3742fa", icon: "●", bg: "rgba(55,66,250,0.08)",   border: "rgba(55,66,250,0.25)" },
-  info:       { color: "#a4b0be", icon: "●", bg: "rgba(164,176,190,0.06)", border: "rgba(164,176,190,0.2)" },
+  suggestion: { color: "#7d8cff", icon: "●", bg: "rgba(125,140,255,0.08)",   border: "rgba(125,140,255,0.25)" },
+  info:       { color: "#b0b8c4", icon: "●", bg: "rgba(164,176,190,0.06)", border: "rgba(164,176,190,0.2)" },
 };
 
 const SEV_COLOR = {
   critical: { color: "#ff4757", bg: "rgba(255,71,87,0.12)" },
   high:     { color: "#ff6348", bg: "rgba(255,99,72,0.12)" },
   medium:   { color: "#ffa502", bg: "rgba(255,165,2,0.12)" },
-  low:      { color: "#a4b0be", bg: "rgba(164,176,190,0.1)" },
+  low:      { color: "#b0b8c4", bg: "rgba(164,176,190,0.1)" },
 };
 
 const STATUS_STYLE = {
   open:          { color: "#ff4757", bg: "rgba(255,71,87,0.12)",   label: "Open" },
   fixed:         { color: "#2ed573", bg: "rgba(46,213,115,0.12)",  label: "Fixed" },
   "in-progress": { color: "#ffa502", bg: "rgba(255,165,2,0.12)",   label: "In Progress" },
-  wontfix:       { color: "#636e72", bg: "rgba(99,110,114,0.12)",  label: "Won't Fix" },
+  wontfix:       { color: "#8b94a2", bg: "rgba(99,110,114,0.12)",  label: "Won't Fix" },
 };
 
 const LANGUAGES = ["auto", "python", "javascript", "typescript", "cpp", "c", "java", "rust", "go"];
@@ -221,6 +221,20 @@ const KNOWN_BUGS = [
 
 const CHANGELOG = [
   {
+    version: "1.3.0",
+    date: "2026-07-06",
+    label: "Design System Release",
+    changes: [
+      { type: "feat", text: "WCAG AA color contrast — every text token audited against every surface it appears on" },
+      { type: "feat", text: "Full keyboard navigation: file tabs, close buttons, and issue cards are real buttons with visible focus rings" },
+      { type: "feat", text: "Responsive layout — editor and results stack vertically on phones and narrow windows" },
+      { type: "feat", text: "Design token system: all colors, fonts, and type sizes defined once as CSS custom properties" },
+      { type: "feat", text: "Type pairing: Inter for UI text, JetBrains Mono for code, filenames, and identifiers" },
+      { type: "feat", text: "Inline SVG icon set replaces emoji for crisp, consistent rendering on every platform" },
+      { type: "feat", text: "Honors prefers-reduced-motion; larger, more readable type scale throughout" },
+    ],
+  },
+  {
     version: "1.2.0",
     date: "2026-07-06",
     label: "Editor Release",
@@ -318,11 +332,43 @@ function loadSavedState() {
   return null;
 }
 
+// ── Inline SVG icons (stroke = currentColor, crisp at any size) ─────────
+
+function Icon({ paths, size = 14 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      style={{ flexShrink: 0 }}
+    >
+      {paths.map((d, i) => <path key={i} d={d} />)}
+    </svg>
+  );
+}
+
+const IC = {
+  zap: ["M13 2 3 14h9l-1 8 10-12h-9l1-8z"],
+  sparkles: [
+    "M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z",
+    "M20 3v4",
+    "M22 5h-4",
+  ],
+  upload: ["M12 3v12", "m17 8-5-5-5 5", "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"],
+  check: ["M20 6 9 17l-5-5"],
+};
+
 // ── Badge component ─────────────────────────────────────────────────────
 
 function Badge({ text, color, bg }) {
   return (
-    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", padding: "2px 7px", borderRadius: 10, background: bg, color, border: `1px solid ${color}22` }}>
+    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", padding: "2px 8px", borderRadius: 10, background: bg, color, border: `1px solid ${color}22` }}>
       {text}
     </span>
   );
@@ -339,40 +385,40 @@ function BugCard({ bug }) {
     <div className="bug-card">
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 10, color: "#ffa502", fontWeight: 700, letterSpacing: "0.06em" }}>{bug.id}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, color: "#ffa502", fontWeight: 700, letterSpacing: "0.06em", fontFamily: "var(--font-mono)" }}>{bug.id}</span>
             <Badge text={st.label} color={st.color} bg={st.bg} />
             <Badge text={bug.severity} color={sv.color} bg={sv.bg} />
-            <span style={{ fontSize: 9, color: "#3d3d50", padding: "2px 6px", background: "#14141f", borderRadius: 4, border: "1px solid #1e1e2e" }}>{bug.category}</span>
+            <span style={{ fontSize: 10.5, color: "#8b94a2", padding: "2px 7px", background: "#14141f", borderRadius: 4, border: "1px solid #1e1e2e" }}>{bug.category}</span>
           </div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#e8e6e3", marginBottom: 4, lineHeight: 1.35 }}>{bug.title}</div>
-          <div style={{ fontSize: 10, color: "#636e72" }}>Reported {bug.reported} · v{bug.affectedVersion}</div>
+          <div style={{ fontSize: 14.5, fontWeight: 700, color: "#edeff3", marginBottom: 5, lineHeight: 1.4 }}>{bug.title}</div>
+          <div style={{ fontSize: 11.5, color: "#8b94a2" }}>Reported {bug.reported} · v{bug.affectedVersion}</div>
         </div>
         <button onClick={() => setExpanded((x) => !x)} className="expand-btn">{expanded ? "▲" : "▼"}</button>
       </div>
 
       {expanded && (
         <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #1e1e2e", animation: "slideDown 0.15s ease" }}>
-          <p style={{ fontSize: 11, color: "#a4b0be", lineHeight: 1.65, marginBottom: 14 }}>{bug.description}</p>
+          <p style={{ fontSize: 13, color: "#b0b8c4", lineHeight: 1.65, marginBottom: 14 }}>{bug.description}</p>
 
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#636e72", marginBottom: 6 }}>Steps to Reproduce</div>
+            <div style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8b94a2", marginBottom: 6 }}>Steps to Reproduce</div>
             <ol style={{ paddingLeft: 18, display: "flex", flexDirection: "column", gap: 4 }}>
               {bug.steps.map((step, i) => (
-                <li key={i} style={{ fontSize: 11, color: "#a4b0be", lineHeight: 1.55 }}>{step}</li>
+                <li key={i} style={{ fontSize: 13, color: "#b0b8c4", lineHeight: 1.55 }}>{step}</li>
               ))}
             </ol>
           </div>
 
           {bug.resolution ? (
             <div style={{ padding: "10px 12px", background: "rgba(46,213,115,0.06)", border: "1px solid rgba(46,213,115,0.2)", borderRadius: 7 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#2ed573", marginBottom: 5 }}>
+              <div style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#2ed573", marginBottom: 5 }}>
                 Resolution · Fixed in v{bug.fixedIn}
               </div>
-              <p style={{ fontSize: 11, color: "#a4b0be", lineHeight: 1.65 }}>{bug.resolution}</p>
+              <p style={{ fontSize: 13, color: "#b0b8c4", lineHeight: 1.65 }}>{bug.resolution}</p>
             </div>
           ) : (
-            <div style={{ padding: "8px 12px", background: "rgba(255,71,87,0.05)", border: "1px solid rgba(255,71,87,0.15)", borderRadius: 7, fontSize: 10, color: "#636e72" }}>
+            <div style={{ padding: "9px 12px", background: "rgba(255,71,87,0.05)", border: "1px solid rgba(255,71,87,0.15)", borderRadius: 7, fontSize: 12, color: "#8b94a2" }}>
               No fix available yet. Contributions welcome.
             </div>
           )}
@@ -401,8 +447,8 @@ function BugTracker() {
     <div style={{ animation: "fadeIn 0.2s ease" }}>
       <div style={{ marginBottom: 18, display: "flex", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: "#e8e6e3", marginBottom: 3 }}>Bug Tracker</div>
-          <div style={{ fontSize: 10, color: "#636e72" }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#edeff3", marginBottom: 4 }}>Bug Tracker</div>
+          <div style={{ fontSize: 12, color: "#8b94a2" }}>
             <span style={{ color: "#ff4757" }}>{openCount} open</span>
             {" · "}
             <span style={{ color: "#2ed573" }}>{fixedCount} fixed</span>
@@ -430,7 +476,7 @@ function BugTracker() {
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{ padding: 40, textAlign: "center", color: "#636e72", fontSize: 12, border: "1px dashed #1e1e2e", borderRadius: 8 }}>
+        <div style={{ padding: 40, textAlign: "center", color: "#8b94a2", fontSize: 13, border: "1px dashed #1e1e2e", borderRadius: 8 }}>
           No bugs match the selected filters.
         </div>
       ) : (
@@ -448,35 +494,35 @@ function ChangelogView() {
   const typeStyle = {
     feat:  { color: "#2ed573", bg: "rgba(46,213,115,0.1)",  label: "feat" },
     fix:   { color: "#ffa502", bg: "rgba(255,165,2,0.1)",   label: "fix" },
-    chore: { color: "#636e72", bg: "rgba(99,110,114,0.1)",  label: "chore" },
+    chore: { color: "#8b94a2", bg: "rgba(99,110,114,0.1)",  label: "chore" },
   };
 
   return (
     <div style={{ animation: "fadeIn 0.2s ease" }}>
       <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 18, fontWeight: 800, color: "#e8e6e3", marginBottom: 3 }}>Changelog</div>
-        <div style={{ fontSize: 10, color: "#636e72" }}>Version history and release notes</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#edeff3", marginBottom: 4 }}>Changelog</div>
+        <div style={{ fontSize: 12, color: "#8b94a2" }}>Version history and release notes</div>
       </div>
 
       {CHANGELOG.map((release) => (
         <div key={release.version} style={{ marginBottom: 16, padding: 16, background: "#12121a", border: "1px solid #1e1e2e", borderRadius: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <span style={{ fontSize: 15, fontWeight: 800, color: "#e8e6e3" }}>v{release.version}</span>
-            <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: "rgba(55,66,250,0.15)", color: "#3742fa", fontWeight: 700 }}>
+            <span style={{ fontSize: 16, fontWeight: 800, color: "#edeff3", fontFamily: "var(--font-mono)" }}>v{release.version}</span>
+            <span style={{ fontSize: 10.5, padding: "2px 9px", borderRadius: 10, background: "rgba(125,140,255,0.15)", color: "#7d8cff", fontWeight: 700 }}>
               {release.label}
             </span>
-            <span style={{ fontSize: 10, color: "#636e72", marginLeft: "auto" }}>{release.date}</span>
+            <span style={{ fontSize: 11.5, color: "#8b94a2", marginLeft: "auto" }}>{release.date}</span>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
             {release.changes.map((c, i) => {
               const ts = typeStyle[c.type] || typeStyle.chore;
               return (
                 <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                  <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.05em", padding: "2px 5px", borderRadius: 4, background: ts.bg, color: ts.color, flexShrink: 0, marginTop: 2 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", padding: "2px 6px", borderRadius: 4, background: ts.bg, color: ts.color, flexShrink: 0, marginTop: 2, fontFamily: "var(--font-mono)" }}>
                     {ts.label}
                   </span>
-                  <span style={{ fontSize: 11, color: "#a4b0be", lineHeight: 1.55 }}>{c.text}</span>
+                  <span style={{ fontSize: 13, color: "#b0b8c4", lineHeight: 1.55 }}>{c.text}</span>
                 </div>
               );
             })}
@@ -674,11 +720,11 @@ export default function App() {
 
       {/* Drag-drop overlay */}
       {dragOver && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(10,10,15,0.92)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", border: "3px dashed #ffa502", borderRadius: 12 }}>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>📂</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "#ffa502" }}>Drop files to review</div>
-            <div style={{ fontSize: 12, color: "#636e72", marginTop: 6 }}>.py .js .ts .cpp .java .rs .go</div>
+        <div aria-hidden="true" style={{ position: "fixed", inset: 0, background: "rgba(10,10,15,0.92)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", border: "3px dashed #ffa502", borderRadius: 12 }}>
+          <div style={{ textAlign: "center", color: "#ffa502" }}>
+            <div style={{ marginBottom: 14 }}><Icon paths={IC.upload} size={44} /></div>
+            <div style={{ fontSize: 19, fontWeight: 700 }}>Drop files to review</div>
+            <div style={{ fontSize: 13, color: "#8b94a2", marginTop: 8, fontFamily: "var(--font-mono)" }}>.py .js .ts .cpp .java .rs .go</div>
           </div>
         </div>
       )}
@@ -690,10 +736,10 @@ export default function App() {
 
           {/* Logo + status */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 34, height: 34, background: "linear-gradient(135deg, #ff4757, #ffa502)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: "#fff", boxShadow: "0 4px 16px rgba(255,71,87,0.3)", animation: "pulse-glow 3s ease infinite" }}>C</div>
-            <h1 style={{ fontSize: 22, fontWeight: 800, background: "linear-gradient(135deg, #fff 40%, #a4b0be)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>CREV</h1>
-            <span style={{ fontSize: 10, color: "#636e72", border: "1px solid #2d3436", padding: "2px 6px", borderRadius: 4 }}>v1.2.0</span>
-            <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: aiAvailable ? "rgba(46,213,115,0.1)" : "rgba(255,71,87,0.1)", color: aiAvailable ? "#2ed573" : "#ff4757", border: `1px solid ${aiAvailable ? "rgba(46,213,115,0.2)" : "rgba(255,71,87,0.2)"}` }}>
+            <div aria-hidden="true" style={{ width: 34, height: 34, background: "linear-gradient(135deg, #ff4757, #ffa502)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, fontFamily: "var(--font-mono)", color: "#fff", boxShadow: "0 4px 16px rgba(255,71,87,0.3)", animation: "pulse-glow 3s ease infinite" }}>C</div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, fontFamily: "var(--font-mono)", letterSpacing: "0.02em", background: "linear-gradient(135deg, #fff 40%, #b0b8c4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>CREV</h1>
+            <span style={{ fontSize: 11, color: "#8b94a2", border: "1px solid #2d3436", padding: "2px 7px", borderRadius: 4, fontFamily: "var(--font-mono)" }}>v1.3.0</span>
+            <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 9px", borderRadius: 10, background: aiAvailable ? "rgba(46,213,115,0.1)" : "rgba(255,71,87,0.1)", color: aiAvailable ? "#2ed573" : "#ff4757", border: `1px solid ${aiAvailable ? "rgba(46,213,115,0.2)" : "rgba(255,71,87,0.2)"}` }}>
               AI {aiAvailable ? "Online" : "Offline"}
             </span>
           </div>
@@ -715,18 +761,18 @@ export default function App() {
           {/* Right-side controls */}
           <div style={{ display: "flex", gap: 6, alignItems: "center", marginLeft: "auto" }}>
             {scanned > 0 && (
-              <span style={{ fontSize: 10, color: "#a4b0be", background: "#14141f", padding: "3px 8px", borderRadius: 10, border: "1px solid #1e1e2e" }}>
+              <span style={{ fontSize: 12, color: "#b0b8c4", background: "#14141f", padding: "3px 10px", borderRadius: 10, border: "1px solid #1e1e2e" }}>
                 {totalIssues} issue{totalIssues !== 1 ? "s" : ""}
               </span>
             )}
             {view === "editor" && (
               <>
-                <select value={depth} onChange={(e) => setDepth(e.target.value)} className="ctrl-select">
+                <select value={depth} onChange={(e) => setDepth(e.target.value)} className="ctrl-select" aria-label="Analysis depth">
                   <option value="quick">Quick</option>
                   <option value="standard">Standard</option>
                   <option value="full">Full</option>
                 </select>
-                <button onClick={() => fileInputRef.current?.click()} className="ctrl-btn">📁 Upload</button>
+                <button onClick={() => fileInputRef.current?.click()} className="ctrl-btn"><Icon paths={IC.upload} size={13} /> Upload</button>
                 <input ref={fileInputRef} type="file" multiple accept=".py,.js,.jsx,.ts,.tsx,.cpp,.cc,.h,.c,.java,.rs,.go" onChange={(e) => handleUpload(e.target.files)} style={{ display: "none" }} />
               </>
             )}
@@ -736,51 +782,45 @@ export default function App() {
         {/* ── Editor view ───────────────────────────────────────────── */}
         {view === "editor" && (
           <div style={{ animation: "fadeIn 0.15s ease" }}>
-            {/* File tabs */}
-            <div style={{ display: "flex", alignItems: "center", gap: 1, overflowX: "auto" }}>
+            {/* File tabs — real buttons: keyboard focusable, screen-reader labelled */}
+            <div className="tab-row" role="tablist" aria-label="Open files">
               {files.map((f) => {
                 const isActive = f.id === activeId;
                 const crit  = f.results?.issue_counts?.critical || 0;
                 const total = f.results?.issues?.length || 0;
                 return (
-                  <div
-                    key={f.id}
-                    onClick={() => setActiveId(f.id)}
-                    style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", background: isActive ? "#12121a" : "#0a0a0f", border: "1px solid", borderColor: isActive ? "#2d3436" : "transparent", borderBottom: isActive ? "1px solid #12121a" : "1px solid #1e1e2e", borderRadius: "7px 7px 0 0", cursor: "pointer", fontSize: 10, color: isActive ? "#e8e6e3" : "#636e72", whiteSpace: "nowrap", marginBottom: -1, transition: "color 0.15s ease" }}
-                  >
-                    <span>{f.name}</span>
-                    {f.results && (
-                      <span style={{ fontSize: 8, padding: "1px 4px", borderRadius: 6, background: crit > 0 ? "rgba(255,71,87,0.15)" : total > 0 ? "rgba(255,165,2,0.15)" : "rgba(46,213,115,0.15)", color: crit > 0 ? "#ff4757" : total > 0 ? "#ffa502" : "#2ed573" }}>
-                        {total}
-                      </span>
-                    )}
-                    {f.results?.duration_ms != null && (
-                      <span style={{ fontSize: 8, color: "#3d3d50" }}>{f.results.duration_ms}ms</span>
-                    )}
+                  <div key={f.id} className={`file-tab${isActive ? " active" : ""}`}>
+                    <button
+                      role="tab"
+                      aria-selected={isActive}
+                      className="file-tab-name"
+                      onClick={() => setActiveId(f.id)}
+                    >
+                      {f.name}
+                      {f.results && (
+                        <span className={`tab-badge ${crit > 0 ? "crit" : total > 0 ? "warn" : "ok"}`}>
+                          {total}
+                        </span>
+                      )}
+                    </button>
                     {files.length > 1 && (
-                      <span
-                        onClick={(e) => { e.stopPropagation(); closeFile(f.id); }}
-                        style={{ color: "#3d3d50", fontSize: 12, cursor: "pointer", transition: "color 0.15s" }}
-                        onMouseEnter={(e) => (e.target.style.color = "#ff4757")}
-                        onMouseLeave={(e) => (e.target.style.color = "#3d3d50")}
-                      >×</span>
+                      <button
+                        className="file-tab-close"
+                        aria-label={`Close ${f.name}`}
+                        onClick={() => closeFile(f.id)}
+                      >×</button>
                     )}
                   </div>
                 );
               })}
-              <div
-                onClick={addFile}
-                style={{ padding: "6px 10px", cursor: "pointer", fontSize: 13, color: "#3d3d50", transition: "color 0.15s" }}
-                onMouseEnter={(e) => (e.target.style.color = "#a4b0be")}
-                onMouseLeave={(e) => (e.target.style.color = "#3d3d50")}
-              >+</div>
+              <button className="add-tab" aria-label="New file" onClick={addFile}>+</button>
             </div>
 
-            {/* Editor + Results grid */}
-            <div style={{ display: "grid", gridTemplateColumns: res ? "1fr 1fr" : "1fr", border: "1px solid #1e1e2e", borderRadius: "0 8px 8px 8px", overflow: "hidden", minHeight: 420 }}>
+            {/* Editor + Results grid — stacks vertically on narrow screens */}
+            <div className={`workspace${res ? " with-results" : ""}`}>
 
               {/* Code editor */}
-              <div style={{ background: "#12121a", display: "flex", flexDirection: "column", borderRight: res ? "1px solid #1e1e2e" : "none" }}>
+              <div className="editor-pane">
                 <div style={{ padding: "7px 12px", background: "#0e0e16", borderBottom: "1px solid #1e1e2e", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", gap: 5 }}>
                     <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#ff5f57" }} />
@@ -788,10 +828,14 @@ export default function App() {
                     <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#28c840" }} />
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <select value={active.language} onChange={(e) => updateFile(active.id, { language: e.target.value })} style={{ background: "transparent", border: "none", color: "#636e72", fontSize: 10, cursor: "pointer", outline: "none", fontFamily: "inherit" }}>
+                    <select
+                      value={active.language}
+                      onChange={(e) => updateFile(active.id, { language: e.target.value })}
+                      className="lang-select"
+                      aria-label="Language"
+                    >
                       {LANGUAGES.map((l) => <option key={l} value={l} style={{ background: "#0e0e16" }}>{l === "auto" ? "AUTO" : l.toUpperCase()}</option>)}
                     </select>
-                    <span style={{ fontSize: 9, color: "#3d3d50" }}>{lines.length} lines</span>
                   </div>
                 </div>
 
@@ -807,10 +851,10 @@ export default function App() {
 
               {/* Results panel */}
               {res && (
-                <div style={{ background: "#12121a", display: "flex", flexDirection: "column", animation: "fadeIn 0.2s ease" }}>
-                  <div style={{ padding: "7px 12px", background: "#0e0e16", borderBottom: "1px solid #1e1e2e", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 11, fontWeight: 600 }}>Results — {active.name}</span>
-                    <span style={{ fontSize: 9, color: "#636e72" }}>
+                <div className="results-pane">
+                  <div style={{ padding: "8px 12px", background: "#0e0e16", borderBottom: "1px solid #1e1e2e", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, fontFamily: "var(--font-mono)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Results — {active.name}</span>
+                    <span style={{ fontSize: 11, color: "#8b94a2", whiteSpace: "nowrap" }}>
                       {res.issues.length} issues · {res.mode === "analyze" ? "AI+Static" : "Static"}
                       {res.cached && <span style={{ color: "#2ed573" }}> · cached</span>}
                       {" · "}{res.duration_ms}ms
@@ -818,18 +862,18 @@ export default function App() {
                   </div>
 
                   {/* CREV-001 fix: viewport-adaptive max height instead of a fixed 500px cap */}
-                  <div style={{ flex: 1, overflowY: "auto", maxHeight: "calc(100vh - 250px)", padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div className="results-scroll">
 
                     {/* Quality score */}
                     {res.score != null && (
                       <div style={{ padding: "9px 12px", background: "#0e0e16", borderRadius: 7, border: "1px solid #1e1e2e" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                          <span style={{ fontSize: 10, color: "#a4b0be" }}>Quality Score</span>
-                          <span style={{ fontSize: 17, fontWeight: 800, color: res.score >= 8 ? "#2ed573" : res.score >= 5 ? "#ffa502" : "#ff4757" }}>
+                          <span style={{ fontSize: 12, color: "#b0b8c4" }}>Quality Score</span>
+                          <span style={{ fontSize: 20, fontWeight: 800, fontFamily: "var(--font-mono)", color: res.score >= 8 ? "#2ed573" : res.score >= 5 ? "#ffa502" : "#ff4757" }}>
                             {res.score.toFixed(1)}/10
                           </span>
                         </div>
-                        <div style={{ height: 4, background: "#1e1e2e", borderRadius: 2, overflow: "hidden" }}>
+                        <div style={{ height: 6, background: "#1e1e2e", borderRadius: 3, overflow: "hidden" }}>
                           <div style={{ width: `${res.score * 10}%`, height: "100%", borderRadius: 2, background: res.score >= 8 ? "#2ed573" : res.score >= 5 ? "linear-gradient(90deg,#ffa502,#ff6348)" : "linear-gradient(90deg,#ff4757,#ff6348)", transition: "width 0.8s ease" }} />
                         </div>
                       </div>
@@ -837,7 +881,7 @@ export default function App() {
 
                     {/* Summary */}
                     {res.summary && (
-                      <div style={{ padding: "8px 10px", background: "rgba(164,176,190,0.04)", border: "1px solid #1e1e2e", borderRadius: 7, fontSize: 11, color: "#a4b0be", lineHeight: 1.55 }}>
+                      <div style={{ padding: "9px 12px", background: "rgba(164,176,190,0.04)", border: "1px solid #1e1e2e", borderRadius: 7, fontSize: 13, color: "#b0b8c4", lineHeight: 1.6 }}>
                         {res.summary}
                       </div>
                     )}
@@ -854,13 +898,13 @@ export default function App() {
                             title={c === 0 ? "" : sevFilter === sev ? "Show all severities" : `Show only ${sev} issues`}
                             style={{ color: SEVERITY[sev].color, opacity: c > 0 ? 1 : 0.3, cursor: c > 0 ? "pointer" : "default" }}
                           >
-                            <span style={{ fontSize: 7 }}>{SEVERITY[sev].icon}</span>
-                            <span style={{ fontWeight: 600 }}>{c}</span>
-                            <span style={{ color: "#636e72" }}>{sev}</span>
+                            <span style={{ fontSize: 8 }} aria-hidden="true">{SEVERITY[sev].icon}</span>
+                            <span style={{ fontWeight: 700 }}>{c}</span>
+                            <span style={{ color: "#8b94a2" }}>{sev}</span>
                           </button>
                         ))}
                         {sevFilter && (
-                          <button className="sev-chip" onClick={() => setSevFilter(null)} style={{ color: "#636e72" }}>
+                          <button className="sev-chip" onClick={() => setSevFilter(null)} style={{ color: "#8b94a2" }}>
                             ✕ clear filter
                           </button>
                         )}
@@ -869,9 +913,11 @@ export default function App() {
 
                     {/* Issue list — click a card to jump to its line */}
                     {res.issues.length === 0 ? (
-                      <div style={{ padding: 24, textAlign: "center", color: "#2ed573", fontSize: 12 }}>✓ No issues found!</div>
+                      <div style={{ padding: 24, textAlign: "center", color: "#2ed573", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+                        <Icon paths={IC.check} size={15} /> No issues found!
+                      </div>
                     ) : visibleIssues.length === 0 ? (
-                      <div style={{ padding: 24, textAlign: "center", color: "#636e72", fontSize: 11 }}>
+                      <div style={{ padding: 24, textAlign: "center", color: "#8b94a2", fontSize: 13 }}>
                         No {sevFilter} issues — clear the filter to see the rest.
                       </div>
                     ) : (
@@ -879,26 +925,26 @@ export default function App() {
                         {visibleIssues.map((issue, i) => {
                           const s = SEVERITY[issue.severity] || SEVERITY.info;
                           return (
-                            <div
+                            <button
                               key={i}
                               className="issue-card"
                               onClick={() => setFlash({ line: issue.line, nonce: Date.now() })}
                               title={`Jump to line ${issue.line}`}
-                              style={{ padding: "8px 10px", background: s.bg, border: `1px solid ${s.border}`, borderRadius: 6, fontSize: 11, animation: `fadeIn 0.15s ease ${i * 0.03}s both` }}
+                              style={{ padding: "9px 12px", background: s.bg, border: `1px solid ${s.border}`, borderRadius: 6, fontSize: 13, color: "#edeff3", animation: `fadeIn 0.15s ease ${i * 0.03}s both` }}
                             >
-                              <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
-                                <span style={{ fontSize: 7, color: s.color }}>{s.icon}</span>
-                                <span style={{ fontWeight: 700, color: s.color, fontSize: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>{issue.severity}</span>
-                                <span style={{ color: "#636e72", fontSize: 9 }}>Line {issue.line}</span>
-                                <span style={{ color: "#3d3d50" }}>·</span>
-                                <span style={{ color: "#636e72", fontSize: 9 }}>{issue.category}</span>
-                                <span style={{ marginLeft: "auto", color: "#3d3d50", fontSize: 9 }}>↵</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                                <span style={{ fontSize: 8, color: s.color }} aria-hidden="true">{s.icon}</span>
+                                <span style={{ fontWeight: 700, color: s.color, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>{issue.severity}</span>
+                                <span style={{ color: "#8b94a2", fontSize: 11, fontFamily: "var(--font-mono)" }}>Line {issue.line}</span>
+                                <span style={{ color: "#78818f" }} aria-hidden="true">·</span>
+                                <span style={{ color: "#8b94a2", fontSize: 11 }}>{issue.category}</span>
+                                <span style={{ marginLeft: "auto", color: "#78818f", fontSize: 11 }} aria-hidden="true">↵</span>
                               </div>
-                              <div style={{ color: "#e8e6e3", lineHeight: 1.45, marginBottom: issue.suggestion ? 4 : 0 }}>{issue.message}</div>
+                              <div style={{ color: "#edeff3", lineHeight: 1.5, marginBottom: issue.suggestion ? 4 : 0 }}>{issue.message}</div>
                               {issue.suggestion && (
-                                <div style={{ color: "#a4b0be", fontSize: 10, fontStyle: "italic", opacity: 0.8 }}>→ {issue.suggestion}</div>
+                                <div style={{ color: "#b0b8c4", fontSize: 12, fontStyle: "italic" }}>→ {issue.suggestion}</div>
                               )}
-                            </div>
+                            </button>
                           );
                         })}
                       </div>
@@ -910,17 +956,17 @@ export default function App() {
 
             {/* Action buttons */}
             <div style={{ marginTop: 12, display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
-              <button onClick={() => handleSingle("scan")} disabled={loading} className="action-btn secondary">⚡ Scan File</button>
+              <button onClick={() => handleSingle("scan")} disabled={loading} className="action-btn secondary"><Icon paths={IC.zap} /> Scan File</button>
               <button
                 onClick={() => handleSingle("analyze")}
                 disabled={loading || !aiAvailable}
                 title={!aiAvailable ? "Server needs ANTHROPIC_API_KEY configured" : ""}
                 className={`action-btn primary${!aiAvailable ? " disabled" : ""}`}
-              >🔍 AI Analyze</button>
+              ><Icon paths={IC.sparkles} /> AI Analyze</button>
               {files.length > 1 && (
                 <>
-                  <button onClick={() => handleAll("scan")} disabled={loading} className="action-btn amber">⚡ Scan All ({files.length})</button>
-                  {aiAvailable && <button onClick={() => handleAll("analyze")} disabled={loading} className="action-btn danger-outline">🔍 AI All ({files.length})</button>}
+                  <button onClick={() => handleAll("scan")} disabled={loading} className="action-btn amber"><Icon paths={IC.zap} /> Scan All ({files.length})</button>
+                  {aiAvailable && <button onClick={() => handleAll("analyze")} disabled={loading} className="action-btn danger-outline"><Icon paths={IC.sparkles} /> AI All ({files.length})</button>}
                 </>
               )}
               {res && <button onClick={() => updateFile(active.id, { results: null })} className="action-btn ghost">Clear</button>}
@@ -928,10 +974,10 @@ export default function App() {
 
             {/* Loading indicator */}
             {loading && (
-              <div style={{ marginTop: 14, textAlign: "center" }}>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 16px", background: "#14141f", border: "1px solid #1e1e2e", borderRadius: 7 }}>
-                  <div style={{ width: 11, height: 11, border: "2px solid #2d3436", borderTopColor: "#ffa502", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-                  <span style={{ fontSize: 10, color: "#a4b0be" }}>
+              <div style={{ marginTop: 14, textAlign: "center" }} role="status" aria-live="polite">
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 16px", background: "#14141f", border: "1px solid #1e1e2e", borderRadius: 7 }}>
+                  <div style={{ width: 12, height: 12, border: "2px solid #2d3436", borderTopColor: "#ffa502", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} aria-hidden="true" />
+                  <span style={{ fontSize: 12, color: "#b0b8c4" }}>
                     {progress ? `(${progress.current}/${progress.total}) ` : ""}{loadingMsg}
                   </span>
                 </div>
@@ -947,13 +993,13 @@ export default function App() {
         {view === "changelog" && <ChangelogView />}
 
         {/* ── Footer ───────────────────────────────────────────────── */}
-        <footer style={{ marginTop: 36, paddingTop: 12, borderTop: "1px solid #1e1e2e", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, fontSize: 9, color: "#3d3d50" }}>
-          <span>Built by Hassan · FastAPI + React + Vite · Claude AI</span>
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            <span>Static = free · AI = server-side API key</span>
+        <footer className="app-footer">
+          <span>Built by Hassan · FastAPI + React + Claude AI</span>
+          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+            <span>Static analysis is free · AI uses a server-side key</span>
             <button
+              className="footer-link"
               onClick={() => { try { localStorage.removeItem("crev-files-v1"); window.location.reload(); } catch {} }}
-              style={{ background: "none", border: "none", color: "#3d3d50", fontSize: 9, cursor: "pointer", fontFamily: "inherit", padding: 0, textDecoration: "underline", textDecorationStyle: "dotted" }}
             >Reset workspace</button>
           </div>
         </footer>

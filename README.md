@@ -21,6 +21,7 @@ The repo ships a [Render Blueprint](render.yaml) — click the button, connect G
 
 - **IDE-grade editor** — custom zero-dependency syntax highlighter (One Dark tokens, all 8 languages), line-number gutter with issue markers, status bar with live cursor position, Tab indentation, and Ctrl+Enter to scan
 - **Interactive reviews** — click any finding to jump to the offending line with a flash highlight; click a severity count to filter the list
+- **Accessible & responsive** — WCAG AA contrast throughout, full keyboard navigation with visible focus rings, `prefers-reduced-motion` support, and a layout that adapts down to phone widths; the design system lives in CSS custom properties (Inter for UI, JetBrains Mono for code)
 - **Dual-layer analysis pipeline** — 8 rule-based static checkers (hardcoded secrets, mutable default args, bare `except`, oversized functions, and more) run instantly and for free; Claude AI performs the deep review with a 0–10 quality score
 - **8 languages** — Python, JavaScript, TypeScript, C++, C, Java, Rust, Go, with automatic detection from filename *or* code content
 - **Server-side API key** — the browser never sees credentials; the frontend talks only to the FastAPI backend
