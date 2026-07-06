@@ -1,0 +1,32 @@
+# CREV — one-command startup:
+#
+#   ANTHROPIC_API_KEY=sk-ant-... docker compose up --build
+#
+# Then open http://localhost:8080
+#
+# The key can also live in backend/.env (copied from backend/.env.example).
+# Without a key the app still works — static analysis is free; only the
+# AI Analyze button is disabled.
+
+services:
+  backend:
+    build: ./backend
+    container_name: crev-backend
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    env_file:
+      - path: ./backend/.env
+        required: false
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: crev-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

@@ -79,6 +79,25 @@ def fetch_user(id):
 
 const KNOWN_BUGS = [
   {
+    id: "CREV-002",
+    title: "Secret detector missed hyphenated API keys",
+    status: "fixed",
+    severity: "high",
+    category: "Security",
+    reported: "2026-07-05",
+    affectedVersion: "1.0.1",
+    description:
+      "The hardcoded-secret checker matched API key prefixes with \\w+ which does not include hyphens. Real-world key formats containing hyphens after the prefix (e.g. sk-ant-...) were silently missed by static analysis, defeating the primary purpose of the security checker.",
+    steps: [
+      "Paste code containing key = \"sk-ant-abcdef1234567890\" into the editor",
+      "Click 'Scan File'",
+      "Observe no security issue is reported despite an obvious hardcoded API key",
+    ],
+    resolution:
+      "The detection pattern now matches [\\w-]+ after known key prefixes. Discovered by the new pytest suite (test_static_analyzer.py) — a regression test now guards this permanently.",
+    fixedIn: "1.1.0",
+  },
+  {
     id: "CREV-007",
     title: "Backend accepts arbitrarily large request bodies",
     status: "fixed",
@@ -140,7 +159,7 @@ const KNOWN_BUGS = [
   {
     id: "CREV-001",
     title: "Results panel height was hardcoded to 500px",
-    status: "open",
+    status: "fixed",
     severity: "medium",
     category: "UI/UX",
     reported: "2025-05-01",
@@ -153,8 +172,9 @@ const KNOWN_BUGS = [
       "Observe the results panel cuts off at approximately 500px",
       "Note that the user must scroll inside a small panel window",
     ],
-    resolution: null,
-    fixedIn: null,
+    resolution:
+      "The results scroll area now uses a viewport-adaptive max height (calc(100vh - 250px)) instead of a fixed pixel cap. Dense result lists use the available screen space on large displays while still scrolling gracefully on small ones.",
+    fixedIn: "1.1.0",
   },
   {
     id: "CREV-005",
@@ -199,6 +219,22 @@ const KNOWN_BUGS = [
 // ── Changelog data ──────────────────────────────────────────────────────
 
 const CHANGELOG = [
+  {
+    version: "1.1.0",
+    date: "2026-07-05",
+    label: "Production Release",
+    changes: [
+      { type: "feat", text: "Docker containerization: backend + frontend images with docker-compose one-command startup" },
+      { type: "feat", text: "GitHub Actions CI: 56-test pytest suite + frontend build on every push" },
+      { type: "feat", text: "24-hour AI result caching wired into /api/analyze — repeat reviews are instant and free (cached badge in results header)" },
+      { type: "feat", text: "Upgraded default AI model to Claude Opus 4.8 (claude-opus-4-8)" },
+      { type: "feat", text: "Code is parsed in memory — removed the temp-file round trip on every request" },
+      { type: "fix",  text: "Secret detector now catches hyphenated API key formats like sk-ant-... (CREV-002)" },
+      { type: "fix",  text: "Results panel height adapts to the viewport instead of a fixed cap (CREV-001)" },
+      { type: "fix",  text: "AI reviews no longer block the server event loop — concurrent users stay responsive" },
+      { type: "fix",  text: "Empty code submissions return a clean 422 instead of a server error" },
+    ],
+  },
   {
     version: "1.0.1",
     date: "2025-05-05",
@@ -633,7 +669,7 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 34, height: 34, background: "linear-gradient(135deg, #ff4757, #ffa502)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: "#fff", boxShadow: "0 4px 16px rgba(255,71,87,0.3)", animation: "pulse-glow 3s ease infinite" }}>C</div>
             <h1 style={{ fontSize: 22, fontWeight: 800, background: "linear-gradient(135deg, #fff 40%, #a4b0be)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>CREV</h1>
-            <span style={{ fontSize: 10, color: "#636e72", border: "1px solid #2d3436", padding: "2px 6px", borderRadius: 4 }}>v1.0.1</span>
+            <span style={{ fontSize: 10, color: "#636e72", border: "1px solid #2d3436", padding: "2px 6px", borderRadius: 4 }}>v1.1.0</span>
             <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: aiAvailable ? "rgba(46,213,115,0.1)" : "rgba(255,71,87,0.1)", color: aiAvailable ? "#2ed573" : "#ff4757", border: `1px solid ${aiAvailable ? "rgba(46,213,115,0.2)" : "rgba(255,71,87,0.2)"}` }}>
               AI {aiAvailable ? "Online" : "Offline"}
             </span>
@@ -763,11 +799,14 @@ export default function App() {
                   <div style={{ padding: "7px 12px", background: "#0e0e16", borderBottom: "1px solid #1e1e2e", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <span style={{ fontSize: 11, fontWeight: 600 }}>Results — {active.name}</span>
                     <span style={{ fontSize: 9, color: "#636e72" }}>
-                      {res.issues.length} issues · {res.mode === "analyze" ? "AI+Static" : "Static"} · {res.duration_ms}ms
+                      {res.issues.length} issues · {res.mode === "analyze" ? "AI+Static" : "Static"}
+                      {res.cached && <span style={{ color: "#2ed573" }}> · cached</span>}
+                      {" · "}{res.duration_ms}ms
                     </span>
                   </div>
 
-                  <div style={{ flex: 1, overflowY: "auto", padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                  {/* CREV-001 fix: viewport-adaptive max height instead of a fixed 500px cap */}
+                  <div style={{ flex: 1, overflowY: "auto", maxHeight: "calc(100vh - 250px)", padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
 
                     {/* Quality score */}
                     {res.score != null && (

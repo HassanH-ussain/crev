@@ -1,6 +1,6 @@
 """
-CREV — AI-Powered Code Review CLI
+CREV — AI-Powered Code Review Engine
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "Hassan"

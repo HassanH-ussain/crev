@@ -123,19 +123,17 @@ def _estimate_complexity(content: str, language: Language) -> str:
     return "low"
 
 
-def parse_file(file_path: str) -> FileAnalysis:
-    """Parse a source file and extract structural metadata."""
-    path = Path(file_path)
-
-    if not path.exists():
-        raise FileNotFoundError(f"File not found: {file_path}")
-
-    content = path.read_text(encoding="utf-8")
-
+def parse_source(
+    content: str,
+    filename: str = "untitled",
+    language: Language | None = None,
+) -> FileAnalysis:
+    """Parse source code held in memory and extract structural metadata."""
     if not content.strip():
-        raise ValueError(f"File is empty: {file_path}")
+        raise ValueError(f"Source is empty: {filename}")
 
-    language = detect_language(file_path)
+    if language is None:
+        language = detect_language(filename)
     patterns = _PATTERNS.get(language, {})
 
     functions = _extract_matches(patterns.get("functions", ""), content)
@@ -144,7 +142,7 @@ def parse_file(file_path: str) -> FileAnalysis:
     complexity = _estimate_complexity(content, language)
 
     return FileAnalysis(
-        path=str(path.resolve()),
+        path=filename,
         language=language,
         content=content,
         line_count=len(content.splitlines()),
@@ -153,6 +151,19 @@ def parse_file(file_path: str) -> FileAnalysis:
         imports=imports,
         complexity_estimate=complexity,
     )
+
+
+def parse_file(file_path: str) -> FileAnalysis:
+    """Parse a source file on disk and extract structural metadata."""
+    path = Path(file_path)
+
+    if not path.exists():
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    content = path.read_text(encoding="utf-8")
+
+    analysis = parse_source(content, filename=str(path.resolve()))
+    return analysis
 
 
 def discover_files(target: str, recursive: bool = True) -> list[str]:

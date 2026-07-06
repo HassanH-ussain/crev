@@ -162,7 +162,7 @@ def check_hardcoded_secrets(analysis: FileAnalysis) -> list[Issue]:
             "Possible hardcoded secret",
         ),
         (
-            r"""['"](?:sk-|pk_|ghp_|gho_|github_pat_)\w+['"]""",
+            r"""['"](?:sk-|pk_|ghp_|gho_|github_pat_)[\w-]+['"]""",
             "Possible API key/token",
         ),
     ]

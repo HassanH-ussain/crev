@@ -13,27 +13,28 @@ Endpoints:
 from __future__ import annotations
 
 import os
-import tempfile
 import time
-from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from crev.cache import get_cached_result, store_result
 from crev.config import load_config
 from crev.models import Language
-from crev.parser import parse_file, detect_language
+from crev.parser import parse_source, detect_language
 from crev.static_analyzer import run_static_analysis
 from crev.ai_engine import analyze_with_ai
 
 load_dotenv()
 
+VERSION = "1.1.0"
+
 app = FastAPI(
     title="CREV API",
     description="AI-Powered Code Review — paste code, find bugs",
-    version="1.0.0",
+    version=VERSION,
 )
 
 # CORS — allow frontend dev server and production
@@ -86,6 +87,7 @@ class ReviewResponse(BaseModel):
     mode: str                          # "scan" or "analyze"
     duration_ms: int
     issue_counts: dict[str, int]
+    cached: bool = False               # AI result served from cache
 
 
 # ── Helper ────────────────────────────────────────────────────────────
@@ -128,44 +130,46 @@ def _run_review(req: ReviewRequest, use_ai: bool) -> ReviewResponse:
     start = time.time()
 
     language_str = _resolve_language(req.code, req.filename, req.language)
-
-    # Write code to a temp file so the parser can read it
-    suffix_map = {
-        "python": ".py", "javascript": ".js", "typescript": ".ts",
-        "cpp": ".cpp", "c": ".c", "java": ".java", "rust": ".rs", "go": ".go",
-    }
-    suffix = suffix_map.get(language_str, ".txt")
-
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=suffix, delete=False, encoding="utf-8"
-    ) as f:
-        f.write(req.code)
-        temp_path = f.name
+    try:
+        language = Language(language_str)
+    except ValueError:
+        language = Language.UNKNOWN
 
     try:
-        analysis = parse_file(temp_path)
-        static_issues = run_static_analysis(analysis)
+        analysis = parse_source(req.code, filename=req.filename, language=language)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
-        if use_ai:
-            config = load_config(depth=req.depth)
-            if not config.is_configured:
-                raise HTTPException(
-                    status_code=503,
-                    detail="No API key configured on the server. Set ANTHROPIC_API_KEY in .env",
-                )
+    static_issues = run_static_analysis(analysis)
+    cached = False
+
+    if use_ai:
+        config = load_config(depth=req.depth)
+        if not config.is_configured:
+            raise HTTPException(
+                status_code=503,
+                detail="No API key configured on the server. Set ANTHROPIC_API_KEY in .env",
+            )
+
+        result = None
+        if config.cache_enabled:
+            result = get_cached_result(req.code, req.depth, req.filename)
+            cached = result is not None
+
+        if result is None:
             result = analyze_with_ai(analysis, config, static_issues)
-            score = result.score
-            summary = result.summary
-            all_issues = result.all_issues
-            mode = "analyze"
-        else:
-            score = None
-            summary = "Static analysis only. Use AI Analyze for a deeper review."
-            all_issues = static_issues
-            mode = "scan"
+            if config.cache_enabled and result.ai_issues:
+                store_result(req.code, req.depth, result)
 
-    finally:
-        Path(temp_path).unlink(missing_ok=True)
+        score = result.score
+        summary = result.summary
+        all_issues = result.all_issues
+        mode = "analyze"
+    else:
+        score = None
+        summary = "Static analysis only. Use AI Analyze for a deeper review."
+        all_issues = static_issues
+        mode = "scan"
 
     duration_ms = int((time.time() - start) * 1000)
 
@@ -196,18 +200,23 @@ def _run_review(req: ReviewRequest, use_ai: bool) -> ReviewResponse:
         mode=mode,
         duration_ms=duration_ms,
         issue_counts=counts,
+        cached=cached,
     )
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────
+#
+# Endpoints are plain `def` (not `async def`) on purpose: the AI review is a
+# blocking network call that can take tens of seconds. FastAPI runs sync
+# endpoints in its threadpool, so one slow review never blocks the event loop.
 
 @app.get("/api/health")
-async def health():
+def health():
     """Health check — also reports if AI is available."""
     config = load_config()
     return {
         "status": "ok",
-        "version": "1.0.0",
+        "version": VERSION,
         "ai_available": config.is_configured,
     }
 
@@ -225,14 +234,14 @@ def _check_size(req: ReviewRequest) -> None:
 
 
 @app.post("/api/scan", response_model=ReviewResponse)
-async def scan_code(req: ReviewRequest):
+def scan_code(req: ReviewRequest):
     """Run static analysis only — free, instant, no API key needed."""
     _check_size(req)
     return _run_review(req, use_ai=False)
 
 
 @app.post("/api/analyze", response_model=ReviewResponse)
-async def analyze_code(req: ReviewRequest):
+def analyze_code(req: ReviewRequest):
     """Run full AI-powered review — requires server-side API key."""
     _check_size(req)
     return _run_review(req, use_ai=True)

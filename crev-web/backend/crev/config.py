@@ -22,8 +22,8 @@ CONFIG_DIR = Path.home() / ".crev"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 CACHE_DIR = CONFIG_DIR / "cache"
 
-DEFAULT_MODEL = "claude-sonnet-4-20250514"
-DEFAULT_MAX_TOKENS = 4096
+DEFAULT_MODEL = "claude-opus-4-8"
+DEFAULT_MAX_TOKENS = 8192
 DEFAULT_DEPTH = "standard"
 MAX_FILE_SIZE_KB = 500
 
