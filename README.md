@@ -11,6 +11,10 @@ A full-stack web application that reviews code the way a senior engineer would: 
 
 Paste code (or drag files in) → get a scored, categorized review in seconds.
 
+![CREV — syntax-highlighted editor with live review results](docs/screenshot-editor.png)
+
+<sub>More views: [bug tracker](docs/screenshot-bugtracker.png)</sub>
+
 ## Try It Live
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/HassanH-ussain/crev)
