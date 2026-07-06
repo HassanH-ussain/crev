@@ -11,8 +11,16 @@ A full-stack web application that reviews code the way a senior engineer would: 
 
 Paste code (or drag files in) → get a scored, categorized review in seconds.
 
+## Try It Live
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/HassanH-ussain/crev)
+
+The repo ships a [Render Blueprint](render.yaml) — click the button, connect GitHub, paste an `ANTHROPIC_API_KEY`, and Render stands up both services on its free tier with a public URL. (Free-tier services sleep when idle; the first request after a quiet period takes ~50 s to wake.)
+
 ## Highlights
 
+- **IDE-grade editor** — custom zero-dependency syntax highlighter (One Dark tokens, all 8 languages), line-number gutter with issue markers, status bar with live cursor position, Tab indentation, and Ctrl+Enter to scan
+- **Interactive reviews** — click any finding to jump to the offending line with a flash highlight; click a severity count to filter the list
 - **Dual-layer analysis pipeline** — 8 rule-based static checkers (hardcoded secrets, mutable default args, bare `except`, oversized functions, and more) run instantly and for free; Claude AI performs the deep review with a 0–10 quality score
 - **8 languages** — Python, JavaScript, TypeScript, C++, C, Java, Rust, Go, with automatic detection from filename *or* code content
 - **Server-side API key** — the browser never sees credentials; the frontend talks only to the FastAPI backend
@@ -141,6 +149,7 @@ Limits: payloads over 500 KB → `413`; empty code → `422`; missing key on `/a
 ```
 crev/
 ├── .github/workflows/ci.yml   # CI: tests + builds on every push
+├── render.yaml                 # one-click Render deployment blueprint
 └── crev-web/
     ├── docker-compose.yml      # one-command startup
     ├── backend/
@@ -155,14 +164,20 @@ crev/
     │   ├── tests/              # 56-test pytest suite
     │   └── Dockerfile          # slim non-root image with healthcheck
     └── frontend/
-        ├── src/                # React app (editor, results, bug tracker, changelog)
+        ├── src/
+        │   ├── App.jsx         # workspace: tabs, results, bug tracker, changelog
+        │   ├── CodeEditor.jsx  # overlay editor: highlight layer + transparent input
+        │   ├── highlight.js    # zero-dependency syntax highlighter (8 languages)
+        │   └── api.js          # backend client with timeouts
         ├── nginx.conf          # static serving + /api reverse proxy
         └── Dockerfile          # multi-stage: node build → nginx
 ```
 
 ## Deploying
 
-The compose file runs as-is on any Docker host (a $5 VPS, AWS Lightsail, DigitalOcean). For PaaS platforms (Render, Railway, Fly.io), deploy the two Dockerfiles as separate services and set:
+**Render (recommended, free):** the [render.yaml](render.yaml) blueprint deploys everything — a Docker web service for the backend and a static site for the frontend, with `/api` rewritten to the backend so no CORS configuration is needed. Use the "Deploy to Render" button above, or in the Render dashboard choose *New → Blueprint* and point it at this repo. The only secret you enter is `ANTHROPIC_API_KEY`.
+
+**Any Docker host** (a $5 VPS, AWS Lightsail, DigitalOcean): the compose file runs as-is. For other PaaS platforms (Railway, Fly.io), deploy the two Dockerfiles as separate services and set:
 
 - `ANTHROPIC_API_KEY` on the backend
 - `FRONTEND_URL=https://your-frontend-domain` on the backend (added to CORS allowlist)

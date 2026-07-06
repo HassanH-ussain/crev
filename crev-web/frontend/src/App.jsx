@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { scanCode, analyzeCode, checkHealth } from "./api";
+import CodeEditor from "./CodeEditor";
 import "./index.css";
 
 // ── Issue severity display config ───────────────────────────────────────
@@ -219,6 +220,19 @@ const KNOWN_BUGS = [
 // ── Changelog data ──────────────────────────────────────────────────────
 
 const CHANGELOG = [
+  {
+    version: "1.2.0",
+    date: "2026-07-06",
+    label: "Editor Release",
+    changes: [
+      { type: "feat", text: "Custom zero-dependency syntax highlighter — One Dark tokens across all 8 supported languages" },
+      { type: "feat", text: "Click any issue card to jump to the offending line with a flash highlight" },
+      { type: "feat", text: "Severity chips filter the results list (click a count to isolate that severity)" },
+      { type: "feat", text: "IDE-style status bar: language, encoding, size, cursor position (Ln/Col)" },
+      { type: "feat", text: "Editor keyboard support — Tab inserts 4 spaces, Ctrl+Enter runs a scan" },
+      { type: "feat", text: "One-click Render deployment blueprint (render.yaml) for a free live demo URL" },
+    ],
+  },
   {
     version: "1.1.0",
     date: "2026-07-05",
@@ -494,11 +508,17 @@ export default function App() {
   const [aiAvailable, setAiAvailable] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [progress, setProgress] = useState(null);
-  const lineRef = useRef(null);
-  const editorRef = useRef(null);
+  const [flash, setFlash] = useState(null);       // { line, nonce } — jump target from an issue click
+  const [sevFilter, setSevFilter] = useState(null); // severity string or null = show all
   const fileInputRef = useRef(null);
 
   const active = files.find((f) => f.id === activeId) || files[0];
+
+  // Reset per-file UI state when switching tabs
+  useEffect(() => {
+    setFlash(null);
+    setSevFilter(null);
+  }, [activeId]);
 
   // Persist to localStorage whenever files change
   useEffect(() => {
@@ -629,13 +649,16 @@ export default function App() {
   const res = active?.results;
   const lines = active?.code.split("\n") || [];
   const issueLines = res ? new Set(res.issues.map((i) => i.line)) : new Set();
+  const visibleIssues = res ? (sevFilter ? res.issues.filter((i) => i.severity === sevFilter) : res.issues) : [];
   const scanned = files.filter((f) => f.results).length;
   const totalIssues = files.reduce((s, f) => s + (f.results?.issues?.length || 0), 0);
   const openBugs = KNOWN_BUGS.filter((b) => b.status === "open").length;
 
-  function syncScroll(e) {
-    if (lineRef.current) lineRef.current.scrollTop = e.target.scrollTop;
-  }
+  // Concrete language for the syntax highlighter (never "auto")
+  const activeExt = active?.name.split(".").pop()?.toLowerCase();
+  const hlLang = active?.language !== "auto"
+    ? active.language
+    : (EXT_MAP[activeExt] || sniffLanguage(active?.code || "") || "unknown");
 
   // ── Render ────────────────────────────────────────────────────────────
 
@@ -669,7 +692,7 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 34, height: 34, background: "linear-gradient(135deg, #ff4757, #ffa502)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: "#fff", boxShadow: "0 4px 16px rgba(255,71,87,0.3)", animation: "pulse-glow 3s ease infinite" }}>C</div>
             <h1 style={{ fontSize: 22, fontWeight: 800, background: "linear-gradient(135deg, #fff 40%, #a4b0be)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>CREV</h1>
-            <span style={{ fontSize: 10, color: "#636e72", border: "1px solid #2d3436", padding: "2px 6px", borderRadius: 4 }}>v1.1.0</span>
+            <span style={{ fontSize: 10, color: "#636e72", border: "1px solid #2d3436", padding: "2px 6px", borderRadius: 4 }}>v1.2.0</span>
             <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 10, background: aiAvailable ? "rgba(46,213,115,0.1)" : "rgba(255,71,87,0.1)", color: aiAvailable ? "#2ed573" : "#ff4757", border: `1px solid ${aiAvailable ? "rgba(46,213,115,0.2)" : "rgba(255,71,87,0.2)"}` }}>
               AI {aiAvailable ? "Online" : "Offline"}
             </span>
@@ -772,25 +795,14 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={{ display: "flex", flex: 1 }}>
-                  {/* Line numbers */}
-                  <div ref={lineRef} style={{ padding: "12px 0", width: 44, background: "#0e0e16", overflowY: "hidden", flexShrink: 0, userSelect: "none" }}>
-                    {lines.map((_, i) => (
-                      <div key={i} style={{ height: 19, lineHeight: "19px", fontSize: 10, color: issueLines.has(i + 1) ? "#ff4757" : "#3d3d50", textAlign: "right", paddingRight: 8, background: issueLines.has(i + 1) ? "rgba(255,71,87,0.06)" : "transparent" }}>
-                        {i + 1}
-                      </div>
-                    ))}
-                  </div>
-                  {/* Textarea */}
-                  <textarea
-                    ref={editorRef}
-                    value={active.code}
-                    onChange={(e) => updateFile(active.id, { code: e.target.value })}
-                    onScroll={syncScroll}
-                    spellCheck={false}
-                    style={{ flex: 1, background: "transparent", color: "#e8e6e3", border: "none", outline: "none", resize: "none", fontFamily: "inherit", fontSize: 12, lineHeight: "19px", padding: "12px 12px 12px 6px", minHeight: 380, tabSize: 4, caretColor: "#ffa502" }}
-                  />
-                </div>
+                <CodeEditor
+                  code={active.code}
+                  language={hlLang}
+                  issueLines={issueLines}
+                  flash={flash}
+                  onChange={(code) => updateFile(active.id, { code })}
+                  onRun={() => !loading && handleSingle("scan")}
+                />
               </div>
 
               {/* Results panel */}
@@ -830,34 +842,57 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* Severity count row */}
+                    {/* Severity filter chips */}
                     {res.issue_counts && (
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center" }}>
                         {Object.entries(res.issue_counts).map(([sev, c]) => SEVERITY[sev] && (
-                          <div key={sev} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 9, color: SEVERITY[sev].color, opacity: c > 0 ? 1 : 0.3 }}>
+                          <button
+                            key={sev}
+                            className={`sev-chip${sevFilter === sev ? " active" : ""}`}
+                            onClick={() => setSevFilter(sevFilter === sev ? null : sev)}
+                            disabled={c === 0}
+                            title={c === 0 ? "" : sevFilter === sev ? "Show all severities" : `Show only ${sev} issues`}
+                            style={{ color: SEVERITY[sev].color, opacity: c > 0 ? 1 : 0.3, cursor: c > 0 ? "pointer" : "default" }}
+                          >
                             <span style={{ fontSize: 7 }}>{SEVERITY[sev].icon}</span>
                             <span style={{ fontWeight: 600 }}>{c}</span>
                             <span style={{ color: "#636e72" }}>{sev}</span>
-                          </div>
+                          </button>
                         ))}
+                        {sevFilter && (
+                          <button className="sev-chip" onClick={() => setSevFilter(null)} style={{ color: "#636e72" }}>
+                            ✕ clear filter
+                          </button>
+                        )}
                       </div>
                     )}
 
-                    {/* Issue list */}
+                    {/* Issue list — click a card to jump to its line */}
                     {res.issues.length === 0 ? (
                       <div style={{ padding: 24, textAlign: "center", color: "#2ed573", fontSize: 12 }}>✓ No issues found!</div>
+                    ) : visibleIssues.length === 0 ? (
+                      <div style={{ padding: 24, textAlign: "center", color: "#636e72", fontSize: 11 }}>
+                        No {sevFilter} issues — clear the filter to see the rest.
+                      </div>
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                        {res.issues.map((issue, i) => {
+                        {visibleIssues.map((issue, i) => {
                           const s = SEVERITY[issue.severity] || SEVERITY.info;
                           return (
-                            <div key={i} style={{ padding: "8px 10px", background: s.bg, border: `1px solid ${s.border}`, borderRadius: 6, fontSize: 11, animation: `fadeIn 0.15s ease ${i * 0.03}s both` }}>
+                            <div
+                              key={i}
+                              className="issue-card"
+                              onClick={() => setFlash({ line: issue.line, nonce: Date.now() })}
+                              title={`Jump to line ${issue.line}`}
+                              style={{ padding: "8px 10px", background: s.bg, border: `1px solid ${s.border}`, borderRadius: 6, fontSize: 11, animation: `fadeIn 0.15s ease ${i * 0.03}s both` }}
+                            >
                               <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
                                 <span style={{ fontSize: 7, color: s.color }}>{s.icon}</span>
                                 <span style={{ fontWeight: 700, color: s.color, fontSize: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>{issue.severity}</span>
                                 <span style={{ color: "#636e72", fontSize: 9 }}>Line {issue.line}</span>
                                 <span style={{ color: "#3d3d50" }}>·</span>
                                 <span style={{ color: "#636e72", fontSize: 9 }}>{issue.category}</span>
+                                <span style={{ marginLeft: "auto", color: "#3d3d50", fontSize: 9 }}>↵</span>
                               </div>
                               <div style={{ color: "#e8e6e3", lineHeight: 1.45, marginBottom: issue.suggestion ? 4 : 0 }}>{issue.message}</div>
                               {issue.suggestion && (
