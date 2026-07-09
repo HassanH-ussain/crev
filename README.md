@@ -17,9 +17,15 @@ Paste code (or drag files in) → get a scored, categorized review in seconds.
 
 ## Try It Live
 
+### 🔗 **[crev-hassan.onrender.com](https://crev-hassan.onrender.com)**
+
+Paste some code and hit **Scan File** — static analysis is instant and free. (Hosted on Render's free tier: the backend sleeps when idle, so the first request after a quiet period takes ~50 s to wake.)
+
+Want your own instance? The repo ships a [Render Blueprint](render.yaml):
+
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/HassanH-ussain/crev)
 
-The repo ships a [Render Blueprint](render.yaml) — click the button, connect GitHub, paste an `ANTHROPIC_API_KEY`, and Render stands up both services on its free tier with a public URL. (Free-tier services sleep when idle; the first request after a quiet period takes ~50 s to wake.)
+Click the button, connect GitHub, paste an `ANTHROPIC_API_KEY`, and Render stands up both services on its free tier with a public URL.
 
 ## Highlights
 
